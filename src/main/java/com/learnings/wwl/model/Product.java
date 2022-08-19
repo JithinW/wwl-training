@@ -40,7 +40,7 @@ public class Product {
 		this.id = id;
 	}
 
-	@Column(name = "product_name", nullable = false)
+	@Column(name = "name", nullable = false)
 	public String getName() {
 		return name;
 	}
