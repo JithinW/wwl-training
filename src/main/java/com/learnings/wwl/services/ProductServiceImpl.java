@@ -20,12 +20,16 @@ public class ProductServiceImpl implements ProductService{
 		return repo.findAll();
 	}
 	
-
 	@Override
 	public Product saveProduct(Product product) {
 		return repo.save(product);
 	}
 
+	  public void deleteProductById(Long id)
+	    {
+	    	repo.deleteById(id);
+	    }
+	    
 
 
 }
