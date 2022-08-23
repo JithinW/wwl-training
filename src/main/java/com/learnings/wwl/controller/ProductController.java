@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -48,7 +47,7 @@ public class ProductController {
 
 	@PostMapping("addproducts")
 	public ResponseEntity<String> createProduct(Product product,
-			@RequestParam(value = "image", required = true) MultipartFile multipartFile) {
+			@RequestParam(value = "image", required = true) MultipartFile multipartFile) throws IOException {
 
 		productService.saveProduct(product);
 
@@ -60,6 +59,9 @@ public class ProductController {
 
 		} catch (IOException e) {
 			log.error(e);
+			throw new IOException("Unable to upload image right now, please try again later");
+			
+			
 		}
 		productService.saveProduct(product);
 		return ResponseEntity.ok("Product inserted successfully");
@@ -67,7 +69,7 @@ public class ProductController {
 	
 
 	@GetMapping("/get/{imgName}")
-	public ResponseEntity<?> downloadImage(@PathVariable("imgName") String imgName) {
+	public ResponseEntity<?> downloadImage(@PathVariable("imgName") String imgName) throws ResourceNotFoundException {
 
 		FileDownloadUtil downloadUtil = new FileDownloadUtil();
 
@@ -79,8 +81,10 @@ public class ProductController {
 		}
 
 		if (resource == null) {
-			return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
+			
+			throw new ResourceNotFoundException("Image not found");
 		}
+	
 
 		String contentType = "image/png";
 		String headerValue = "inline; filename=\"" + resource.getFilename() + "\"";
