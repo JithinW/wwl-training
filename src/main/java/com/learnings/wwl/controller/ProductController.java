@@ -29,11 +29,13 @@ import com.learnings.wwl.model.Product;
 import com.learnings.wwl.services.FileDownloadUtil;
 import com.learnings.wwl.services.ProductService;
 
+import com.learnings.wwl.exception.ResourceNotFoundException;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/api")
 public class ProductController {
-	
+
 	private static final Logger log = LogManager.getLogger();
 
 	@Autowired
@@ -46,14 +48,12 @@ public class ProductController {
 
 	@PostMapping("addproducts")
 	public ResponseEntity<String> createProduct(Product product,
-			@RequestParam(value = "image", required = false) MultipartFile multipartFile) {
+			@RequestParam(value = "image", required = true) MultipartFile multipartFile) {
 
 		productService.saveProduct(product);
 
 		product.setImg(product.getId() + multipartFile.getOriginalFilename());
-
-		String uploadDir = "./Images/";
-		Path uploadPath = Paths.get(uploadDir);
+		Path uploadPath = Paths.get("./Images/");
 		try (InputStream inputStream = multipartFile.getInputStream()) {
 			Path filePath = uploadPath.resolve(String.valueOf(product.getId()) + multipartFile.getOriginalFilename());
 			Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -67,7 +67,8 @@ public class ProductController {
 	
 
 	@GetMapping("/get/{imgName}")
-	public ResponseEntity<?> downloadFile(@PathVariable("imgName") String imgName) {
+	public ResponseEntity<?> downloadImage(@PathVariable("imgName") String imgName) {
+
 		FileDownloadUtil downloadUtil = new FileDownloadUtil();
 
 		Resource resource = null;
@@ -81,18 +82,21 @@ public class ProductController {
 			return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
 		}
 
-		String contentType = "application/octet-stream";
-		String headerValue = "attachment; filename=\"" + resource.getFilename() + "\"";
+		String contentType = "image/png";
+		String headerValue = "inline; filename=\"" + resource.getFilename() + "\"";
 
 		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
 				.header(HttpHeaders.CONTENT_DISPOSITION, headerValue).body(resource);
 	}
 	
-	
-	    @GetMapping("/delete/{id}")
-	    public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id)
-	    {
-	    	productService.deleteProductById(id);
-	    	return ResponseEntity.ok("Deleted Successfully");
-	    }
+
+	@GetMapping("/delete/{id}")
+	public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id) throws ResourceNotFoundException {
+
+		productService.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Product not found, please check the id"));
+
+		productService.deleteProductById(id);
+		return ResponseEntity.ok("Deleted Successfully");
+	}
 }
