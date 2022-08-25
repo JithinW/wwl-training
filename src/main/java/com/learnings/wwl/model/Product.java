@@ -40,7 +40,7 @@ public class Product {
 		this.id = id;
 	}
 
-	@Column(name = "name", nullable = false)
+	@Column(name = "name", nullable = true)
 	public String getName() {
 		return name;
 	}
@@ -49,7 +49,7 @@ public class Product {
 		this.name = name;
 	}
 
-	@Column(name = "description", nullable = false)
+	@Column(name = "description", nullable = true)
 	public String getDescription() {
 		return description;
 	}
@@ -68,7 +68,7 @@ public class Product {
 		this.description = description;
 	}
 
-	@Column(name = "price", nullable = false)
+	@Column(name = "price", nullable = true)
 	public double getPrice() {
 		return price;
 	}

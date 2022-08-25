@@ -19,12 +19,15 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learnings.wwl.model.Product;
+import com.learnings.wwl.model.Ticket;
+import com.learnings.wwl.repository.TicketRepo;
 import com.learnings.wwl.services.FileDownloadUtil;
 import com.learnings.wwl.services.ProductService;
 
@@ -39,15 +42,18 @@ public class ProductController {
 
 	@Autowired
 	ProductService productService;
+	
+	@Autowired
+	TicketRepo ticketRepo;
 
 	@GetMapping("/products")
 	public List<Product> getProducts() {
 		return productService.findAll();
 	}
 
-	@PostMapping("addproducts")
-	public ResponseEntity<String> createProduct(Product product,
-			@RequestParam(value = "image", required = true) MultipartFile multipartFile) throws IOException {
+	@PostMapping(value = "addproducts", consumes = "application/json", produces = "application/json")
+	public ResponseEntity<String> createProduct(@RequestBody Product product,
+			@RequestParam(value = "image", required = false) MultipartFile multipartFile) throws IOException {
 
 		productService.saveProduct(product);
 
@@ -87,7 +93,7 @@ public class ProductController {
 	
 
 		String contentType = "image/png";
-		String headerValue = "inline; filename=\"" + resource.getFilename() + "\"";
+		String headerValue = "attachment; filename=\"" + resource.getFilename() + "\"";
 
 		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
 				.header(HttpHeaders.CONTENT_DISPOSITION, headerValue).body(resource);
@@ -103,4 +109,12 @@ public class ProductController {
 		productService.deleteProductById(id);
 		return ResponseEntity.ok("Deleted Successfully");
 	}
+	
+	
+	
+	@PostMapping(
+			  value = "/create", consumes = "application/json", produces = "application/json")
+			public Ticket create(@RequestBody Ticket ticket) {
+			    return ticketRepo.save(ticket);
+			}
 }
