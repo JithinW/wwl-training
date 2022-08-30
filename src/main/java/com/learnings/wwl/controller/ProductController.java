@@ -51,8 +51,8 @@ public class ProductController {
 		return productService.findAll();
 	}
 
-	@PostMapping(value = "addproducts", consumes = "application/json", produces = "application/json")
-	public ResponseEntity<String> createProduct(@RequestBody Product product,
+	@PostMapping(value = "addproducts")
+	public ResponseEntity<String> createProduct(Product product,
 			@RequestParam(value = "image", required = false) MultipartFile multipartFile) throws IOException {
 
 		productService.saveProduct(product);
@@ -113,7 +113,7 @@ public class ProductController {
 	
 	
 	@PostMapping(
-			  value = "/create", consumes = "application/json", produces = "application/json")
+			  value = "/create")
 			public Ticket create(@RequestBody Ticket ticket) {
 			    return ticketRepo.save(ticket);
 			}
