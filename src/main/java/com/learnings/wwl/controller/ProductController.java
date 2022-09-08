@@ -1,11 +1,7 @@
 package com.learnings.wwl.controller;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,16 +15,14 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learnings.wwl.model.Product;
-import com.learnings.wwl.model.Ticket;
-import com.learnings.wwl.repository.TicketRepo;
-import com.learnings.wwl.services.FileDownloadUtil;
+import com.learnings.wwl.services.ImageUploadDownloadUtil;
 import com.learnings.wwl.services.ProductService;
 
 import com.learnings.wwl.exception.ResourceNotFoundException;
@@ -38,13 +32,10 @@ import com.learnings.wwl.exception.ResourceNotFoundException;
 @RequestMapping("/api")
 public class ProductController {
 
-	private static final Logger log = LogManager.getLogger();
+	public static final Logger log = LogManager.getLogger();
 
 	@Autowired
 	ProductService productService;
-	
-	@Autowired
-	TicketRepo ticketRepo;
 
 	@GetMapping("/products")
 	public List<Product> getProducts() {
@@ -55,46 +46,23 @@ public class ProductController {
 	public ResponseEntity<String> createProduct(Product product,
 			@RequestParam(value = "image", required = false) MultipartFile multipartFile) throws IOException {
 
-		productService.saveProduct(product);
-
+		Product savedProduct = productService.saveProduct(product);
 		product.setImg(product.getId() + multipartFile.getOriginalFilename());
-		Path uploadPath = Paths.get("./Images/");
-		try (InputStream inputStream = multipartFile.getInputStream()) {
-			Path filePath = uploadPath.resolve(String.valueOf(product.getId()) + multipartFile.getOriginalFilename());
-			Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-
-		} catch (IOException e) {
-			log.error(e);
-			throw new IOException("Unable to upload image right now, please try again later");
-			
-			
-		}
+		ImageUploadDownloadUtil imageUploadUtil = new ImageUploadDownloadUtil();
+		imageUploadUtil.uploadImage(savedProduct,multipartFile);
 		productService.saveProduct(product);
 		return ResponseEntity.ok("Product inserted successfully");
 	}
 	
 
 	@GetMapping("/get/{imgName}")
-	public ResponseEntity<?> downloadImage(@PathVariable("imgName") String imgName) throws ResourceNotFoundException {
+	public ResponseEntity<?> downloadImage(@PathVariable("imgName") String imgName)
+			throws ResourceNotFoundException, IOException, URISyntaxException {
 
-		FileDownloadUtil downloadUtil = new FileDownloadUtil();
-
-		Resource resource = null;
-		try {
-			resource = downloadUtil.getFileAsResource(imgName);
-		} catch (IOException e) {
-			return ResponseEntity.internalServerError().build();
-		}
-
-		if (resource == null) {
-			
-			throw new ResourceNotFoundException("Image not found");
-		}
-	
-
+		ImageUploadDownloadUtil downloadUtil = new ImageUploadDownloadUtil();
+		Resource resource = downloadUtil.getImageAsResource(imgName);
 		String contentType = "image/png";
 		String headerValue = "attachment; filename=\"" + resource.getFilename() + "\"";
-
 		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
 				.header(HttpHeaders.CONTENT_DISPOSITION, headerValue).body(resource);
 	}
@@ -109,12 +77,6 @@ public class ProductController {
 		productService.deleteProductById(id);
 		return ResponseEntity.ok("Deleted Successfully");
 	}
-	
-	
-	
-	@PostMapping(
-			  value = "/create")
-			public Ticket create(@RequestBody Ticket ticket) {
-			    return ticketRepo.save(ticket);
-			}
+
+
 }

@@ -16,6 +16,7 @@ public class ProductServiceImpl implements ProductService {
 	ProductRepo productRepo;
 
 	public List<Product> findAll() {
+		
 		return productRepo.findAll();
 	}
 
