@@ -51,6 +51,7 @@ public class ProductController {
 		ImageUploadDownloadUtil imageUploadUtil = new ImageUploadDownloadUtil();
 		imageUploadUtil.uploadImage(savedProduct,multipartFile);
 		productService.saveProduct(product);
+		System.out.println("hii");
 		return ResponseEntity.ok("Product inserted successfully");
 	}
 	
